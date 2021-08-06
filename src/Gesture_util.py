@@ -48,7 +48,6 @@ class GestureUtil():
         if is_thumb_closed and is_index_finger_closed and \
             is_middle_finger_closed and is_ring_finger_closed and\
             is_pinky_finger_closed:
-            # print('Hand is closed')
             return HandGesture.CLOSE
         elif not is_thumb_closed and not is_index_finger_closed and \
             is_middle_finger_closed and is_ring_finger_closed and is_pinky_finger_closed:
@@ -60,7 +59,6 @@ class GestureUtil():
             and not is_index_finger_closed:
             return HandGesture.DRAW
         else:
-            # print('Hand is open')
             return HandGesture.OPEN
 
     def get_angle(self, hand_landmarks):

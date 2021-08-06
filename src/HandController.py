@@ -11,15 +11,15 @@ from ImageUtil import ImageUtils
 class HandController:
 
     def __init__(self) -> None:
-        self.mp_drawing = mp.solutions.drawing_utils
         self.mp_hands = mp.solutions.hands
         self.gesture_utils = GestureUtil(self.mp_hands)
-        self.drawing_styles = mp.solutions.drawing_styles
         self.image_width, self.image_height = 0, 0
         self.curr_factor = -100
         self.rotate_factor = -100.0
         self.is_editable = False
-        self.image_utils = ImageUtils()
+        self.image_utils = ImageUtils(self.mp_hands)
+        self.drawable_xy = list()
+        self.drawable_y = list()
 
     def start_reading_cam(self):
         cap = cv2.VideoCapture(0)
@@ -53,7 +53,7 @@ class HandController:
                         which_hand = results.multi_handedness[idx].classification[0].label
                         if which_hand == 'Left':
                             left_hand_gesture = self.gesture_utils.determine_gesture(hand_landmarks)
-                            self.draw_hand_landmarks(drawable_img, hand_landmarks)
+                            self.image_utils.draw_hand_landmarks(drawable_img, hand_landmarks)
                             which_hand = ''
                         elif which_hand == 'Right':
                             if left_hand_gesture:
@@ -85,6 +85,9 @@ class HandController:
                 curr_length = length
                 if self.curr_factor != -100:
                     image = self.image_utils.zoom_image(image, self.curr_factor - factor)
+                    start_xy = (int(x1), int(y1))
+                    end_xy = (int(x2), int(y2))
+                    self.image_utils.draw_hand_reference(drawable_img, (int(x1), int(y1)), (int(x2), int(y2)))
                 self.curr_factor = factor
             elif right_hand_gesture == HandGesture.ROTATE:
                 degrees = self.gesture_utils.get_angle(hand_landmarks)
@@ -92,22 +95,17 @@ class HandController:
                     self.rotate_factor = degrees
                 else:
                     image = self.image_utils.rotate_image(image, int(self.rotate_factor) - int(degrees))
+                    self.image_utils.draw_hand_reference(drawable_img, (int(x1), int(y1)), (int(x2), int(y2)))
             elif right_hand_gesture == HandGesture.DRAW:
                 x = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * self.image_width
                 y = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * self.image_height
-                cv2.circle(image, (int(x), int(y)), 15, (0, 0, 255), cv2.FILLED)
+                self.drawable_xy.append((int(x), int(y)))
+                self.image_utils.draw_on_screen(image, self.drawable_xy)
                 
-        cv2.circle(drawable_img, (int(x1), int(y1)), 15, (255, 0, 255), cv2.FILLED)
-        cv2.circle(drawable_img, (int(x2), int(y2)), 15, (255, 0, 255), cv2.FILLED)
-        cv2.line(drawable_img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 255), 3)
-        self.draw_hand_landmarks(drawable_img, hand_landmarks)
+        self.image_utils.draw_hand_landmarks(drawable_img, hand_landmarks)
         return image, drawable_img
 
-    def draw_hand_landmarks(self, image, hand_landmarks):
-        self.mp_drawing.draw_landmarks(
-            image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS,
-            self.drawing_styles.get_default_hand_landmark_style(),
-            self.drawing_styles.get_default_hand_connection_style())
+
 
 if __name__ == '__main__':
     hand_controller = HandController()
