@@ -25,13 +25,15 @@ class HandController:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.image_width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.image_height)
-        
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter('output.avi', fourcc, 20.0, (1280, 480))
         with self.mp_hands.Hands(
             min_detection_confidence=0.7,
             min_tracking_confidence=0.7) as hands:
             while cap.isOpened():
                 success, image = cap.read()
                 image = cv2.resize(image, (self.image_width, self.image_height))
+                
                 if not success:
                     print("Ignoring empty camera frame.")
                     # If loading a video, use 'break' instead of 'continue'.
@@ -74,9 +76,12 @@ class HandController:
                 
                 image = cv2.hconcat([image, drawable_img])
                 cv2.imshow('MediaPipe Hands', image)
+                out.write(image) 
                 if cv2.waitKey(5) & 0xFF == 27:
                     break
         cap.release()
+        out.release()
+        cv2.destroyAllWindows()
 
     
 

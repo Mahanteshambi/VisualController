@@ -153,7 +153,7 @@ class ImageUtils:
 
     def draw_on_screen(self, image, drawable_xy):
         for (x, y) in drawable_xy:
-            cv2.circle(image, (int(x), int(y)), 5, (255, 0, 0), cv2.FILLED)
+            cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), cv2.FILLED)
 
     def add_indicators(self, image):
         pil_image = Image.fromarray(image)
